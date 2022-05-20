@@ -3,7 +3,7 @@ from loguru import logger
 import gspread
 
 from app.config import qctworksheet_config
-from app.messages import DICOMDownloadMessage
+from app.models import RawScan
 
 
 class QCTWorksheet:
@@ -22,17 +22,22 @@ class QCTWorksheet:
         session = None
         logger.exception("Failed to initiate Google spread sheet session")
 
-    def add_new_scan(self, scan: DICOMDownloadMessage):
+    def calculate_fu(proj: str, subj: str) -> int:
+        subj_scan_list = QCTWorksheet.session.worksheet(proj).findall(subj)
+
+        return len(subj_scan_list)
+
+    @staticmethod
+    def add_new_scan(scan: RawScan):
         try:
             QCTWorksheet.session.worksheet(scan.proj).append_row(
                 values=[
                     scan.proj,
-                    "",
+                    scan.subj,
                     "",
                     scan.study_id,
                     scan.ct_date,
-                    "",
-                    scan.dcm_path,
+                    scan.fu,
                     scan.dcm_path,
                 ]
             )

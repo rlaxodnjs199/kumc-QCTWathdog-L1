@@ -4,10 +4,11 @@ from typing import List, Union
 from loguru import logger
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
+import re
 
 from app.config import qctwatchdog_config
-from app.messages import DICOMDownloadMessage
-from app.qctworksheet import qctworksheet
+from app.models import RawScan
+from app.qctworksheet import QCTWorksheet, qctworksheet
 
 
 class QCTWorksheetWatcher:
@@ -46,16 +47,24 @@ class DICOMFolderHandler(FileSystemEventHandler):
         return len(os.path.basename(path).split("_")) == 2
 
     @staticmethod
-    def construct_dicom_download_message(path) -> Union[DICOMDownloadMessage, None]:
+    def construct_raw_scan(path) -> Union[RawScan, None]:
         parent_folder_components = os.path.basename(os.path.dirname(path)).split("_")
         dicom_folder_components = os.path.basename(path).split("_")
 
         if len(parent_folder_components) == 4 and len(dicom_folder_components) == 2:
             proj = parent_folder_components[2]
             study_id = dicom_folder_components[0]
+            subj = re.sub(r"[^a-zA-Z0-9]", "", study_id)
             ct_date = dicom_folder_components[1]
-            return DICOMDownloadMessage(
-                proj=proj, study_id=study_id, ct_date=ct_date, dcm_path=path
+            fu = QCTWorksheet.calculate_fu(proj, subj)
+
+            return RawScan(
+                proj=proj,
+                subj=subj,
+                study_id=study_id,
+                ct_date=ct_date,
+                fu=fu,
+                dcm_path=path,
             )
         else:
             logger.error(f"Invalid folder name syntax - Check path: {path}")
@@ -64,15 +73,16 @@ class DICOMFolderHandler(FileSystemEventHandler):
         if event.is_directory and DICOMFolderHandler.validate_dicom_folder(
             event.src_path
         ):
-            dicom_download_message = (
-                DICOMFolderHandler.construct_dicom_download_message(event.src_path)
-            )
+            raw_scan = DICOMFolderHandler.construct_raw_scan(event.src_path)
             logger.info(
-                f"New scan download detected: Project={dicom_download_message.proj}, StudyID={dicom_download_message.study_id}, CTDate={dicom_download_message.ct_date}, Path={dicom_download_message.dcm_path}"
+                f"New scan download detected: Project={raw_scan.proj}, StudyID={raw_scan.study_id}, CTDate={raw_scan.ct_date}, Path={raw_scan.dcm_path}"
             )
 
-            if dicom_download_message:
-                qctworksheet.add_new_scan(dicom_download_message)
+            if raw_scan:
+                try:
+                    qctworksheet.add_new_scan(raw_scan)
+                except:
+                    logger.error("Add new scan entry to the QCT Worksheet failed")
 
 
 def initiate_qctwatchdog():

@@ -4,8 +4,10 @@ from pathlib import Path
 
 
 @dataclass
-class DICOMDownloadMessage:
+class RawScan:
     proj: str
+    subj: str
     study_id: str
     ct_date: date
+    fu: int
     dcm_path: Path

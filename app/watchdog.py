@@ -6,7 +6,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 import re
 
-from app.config import qctwatchdog_config
+from app.config import QCTWatchdogConfig, QCTWorksheetConfig
 from app.models import RawScan
 from app.qctworksheet import QCTWorksheet, qctworksheet
 
@@ -57,6 +57,7 @@ class DICOMFolderHandler(FileSystemEventHandler):
             subj = re.sub(r"[^a-zA-Z0-9]", "", study_id)
             ct_date = dicom_folder_components[1]
             fu = QCTWorksheet.calculate_fu(proj, subj)
+            dcm_path = os.path.relpath(path, QCTWorksheetConfig.p_drive_path_prefix)
 
             return RawScan(
                 proj=proj,
@@ -64,7 +65,7 @@ class DICOMFolderHandler(FileSystemEventHandler):
                 study_id=study_id,
                 ct_date=ct_date,
                 fu=fu,
-                dcm_path=path,
+                dcm_path=dcm_path,
             )
         else:
             logger.error(f"Invalid folder name syntax - Check path: {path}")
@@ -86,6 +87,6 @@ class DICOMFolderHandler(FileSystemEventHandler):
 
 
 def initiate_qctwatchdog():
-    dicom_download_paths = qctwatchdog_config.dicom_download_paths
+    dicom_download_paths = QCTWatchdogConfig.dicom_download_paths
     qctwatchdog = QCTWorksheetWatcher(dicom_download_paths, DICOMFolderHandler)
     qctwatchdog.run()

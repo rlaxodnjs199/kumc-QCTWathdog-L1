@@ -2,21 +2,21 @@ from functools import lru_cache
 from loguru import logger
 import gspread
 
-from app.config import qctworksheet_config
+from app.config import QCTWorksheetConfig
 from app.models import RawScan
 
 
 class QCTWorksheet:
     try:
         google_service_account = gspread.service_account(
-            filename=qctworksheet_config.google_api_token_path
+            filename=QCTWorksheetConfig.google_api_token_path
         )
     except:
         google_service_account = None
         logger.exception("Failed to initiate Google service account")
     try:
         session = google_service_account.open_by_key(
-            qctworksheet_config.qctworksheet_api_key
+            QCTWorksheetConfig.qctworksheet_api_key
         )
     except:
         session = None

@@ -52,12 +52,16 @@ class DICOMFolderHandler(FileSystemEventHandler):
         dicom_folder_components = os.path.basename(path).split("_")
 
         if len(parent_folder_components) == 4 and len(dicom_folder_components) == 2:
-            proj = parent_folder_components[2]
-            study_id = dicom_folder_components[0]
-            subj = re.sub(r"[^a-zA-Z0-9]", "", study_id)
-            ct_date = dicom_folder_components[1]
-            fu = QCTWorksheet.calculate_fu(proj, subj)
-            dcm_path = os.path.relpath(path, QCTWorksheetConfig.p_drive_path_prefix)
+            try:
+                proj = parent_folder_components[2]
+                study_id = dicom_folder_components[0]
+                subj = re.sub(r"[^a-zA-Z0-9]", "", study_id)
+                ct_date = dicom_folder_components[1]
+                fu = QCTWorksheet.calculate_fu(proj, subj)
+                dcm_path = os.path.relpath(path, QCTWorksheetConfig.p_drive_path_prefix)
+            except:
+                logger.error("Invalid folder name")
+                return None
 
             return RawScan(
                 proj=proj,

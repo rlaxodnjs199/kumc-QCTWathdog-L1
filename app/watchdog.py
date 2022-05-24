@@ -79,11 +79,11 @@ class DICOMFolderHandler(FileSystemEventHandler):
             event.src_path
         ):
             raw_scan = DICOMFolderHandler.construct_raw_scan(event.src_path)
-            logger.info(
-                f"New scan download detected: Project={raw_scan.proj}, StudyID={raw_scan.study_id}, CTDate={raw_scan.ct_date}, Path={raw_scan.dcm_path}"
-            )
 
             if raw_scan:
+                logger.info(
+                    f"New scan download detected: Project={raw_scan.proj}, StudyID={raw_scan.study_id}, CTDate={raw_scan.ct_date}, Path={raw_scan.dcm_path}"
+                )
                 try:
                     qctworksheet.add_new_scan(raw_scan)
                 except:

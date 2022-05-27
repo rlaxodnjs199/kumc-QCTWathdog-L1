@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  qctwatchdog:
+    container_name: "qctwatchdog"
+    restart: always
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    command: python run_qctwatchdog.py
+    volumes:
+      - /home/twkim/P-Drive:/home/twkim/P-Drive
+      - qctwatchdog
+
+volumes:
+  qctwatchdog:

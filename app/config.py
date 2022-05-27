@@ -5,7 +5,9 @@ load_dotenv()
 
 
 class QCTWorksheetConfig:
-    google_api_token_path = os.environ.get("GOOGLE_API_TOKEN_PATH")
+    google_api_token_path = os.path.join(
+        os.getcwd(), os.environ.get("GOOGLE_API_TOKEN_PATH")
+    )
     qctworksheet_api_key = os.environ.get("QCTWORKSHEET_GOOGLE_API_KEY")
     p_drive_path_prefix = os.environ.get("PDRIVE_PATH_PREFIX")
 

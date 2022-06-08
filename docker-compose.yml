@@ -10,7 +10,7 @@ services:
     command: python run_qctwatchdog.py
     volumes:
       - /home/twkim/P-Drive:/home/twkim/P-Drive
-      - qctwatchdog
+      - qctwatchdog:/data
 
 volumes:
   qctwatchdog:

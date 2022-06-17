@@ -62,6 +62,10 @@ class DICOMFolderHandler(FileSystemEventHandler):
             except:
                 logger.error("Invalid folder name")
                 return None
+            
+            if QCTWorksheet.check_duplicate(proj, subj, ct_date):
+                logger.info(f'Scan already exists in QCTWorksheet: Skip {proj}_{subj}_{ct_date}')
+                return None
 
             return RawScan(
                 proj=proj,

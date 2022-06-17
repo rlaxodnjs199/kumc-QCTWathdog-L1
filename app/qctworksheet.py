@@ -22,10 +22,23 @@ class QCTWorksheet:
         session = None
         logger.exception("Failed to initiate Google spread sheet session")
 
+    @staticmethod
     def calculate_fu(proj: str, subj: str) -> int:
         subj_scan_list = QCTWorksheet.session.worksheet(proj).findall(subj)
 
         return len(subj_scan_list)
+
+    @staticmethod
+    def check_duplicate(proj: str, subj: str, ct_date: str):
+        subj_scan_list = QCTWorksheet.session.worksheet(proj).findall(
+            subj
+        )
+        for subj_scan in subj_scan_list:
+            subj_scan_ct_date = QCTWorksheet.session.worksheet(proj).row_values(subj_scan.row)[4]
+            if subj_scan_ct_date == ct_date:
+                return True
+
+        return False
 
     @staticmethod
     def add_new_scan(scan: RawScan):

@@ -24,9 +24,10 @@ class QCTWorksheet:
 
     @staticmethod
     def calculate_fu(proj: str, subj: str) -> int:
-        subj_scan_list = QCTWorksheet.session.worksheet(proj).findall(subj)
+        subj_list = QCTWorksheet.session.worksheet(proj).findall(subj)
+	subj_scan_indexes = {subj.row for subj in subj_list} 
 
-        return len(subj_scan_list)
+        return len(subj_scan_indexes)
 
     @staticmethod
     def check_duplicate(proj: str, subj: str, ct_date: str):

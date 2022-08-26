@@ -11,3 +11,4 @@ class RawScan:
     ct_date: date
     fu: int
     dcm_path: Path
+    sheet: str

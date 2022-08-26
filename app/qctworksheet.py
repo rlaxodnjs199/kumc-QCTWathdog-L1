@@ -25,23 +25,23 @@ class QCTWorksheet:
         logger.exception("Failed to initiate Google spread sheet session")
 
     @staticmethod
-    def calculate_fu(proj: str, subj: str) -> int:
+    def calculate_fu(sheet: str, subj: str) -> int:
         try:
-            subj_list = QCTWorksheet.session.worksheet(proj).findall(subj)
+            subj_list = QCTWorksheet.session.worksheet(sheet).findall(subj)
             subj_scan_indexes = {subj.row for subj in subj_list}
         except GSpreadException:
             logger.warning("GSpread Exception: Quota limit")
             sleep(60)
-            return QCTWorksheet.calculate_fu(proj, subj)
+            return QCTWorksheet.calculate_fu(sheet, subj)
 
         return len(subj_scan_indexes)
 
     @staticmethod
-    def check_duplicate(proj: str, subj: str, ct_date: str):
+    def check_duplicate(sheet: str, subj: str, ct_date: str):
         try:
-            subj_scan_list = QCTWorksheet.session.worksheet(proj).findall(subj)
+            subj_scan_list = QCTWorksheet.session.worksheet(sheet).findall(subj)
             for subj_scan in subj_scan_list:
-                subj_scan_ct_date = QCTWorksheet.session.worksheet(proj).row_values(
+                subj_scan_ct_date = QCTWorksheet.session.worksheet(sheet).row_values(
                     subj_scan.row
                 )[4]
                 if subj_scan_ct_date == ct_date:
@@ -49,14 +49,14 @@ class QCTWorksheet:
         except GSpreadException:
             logger.warning("GSpread Exception: Quota limit")
             sleep(60)
-            return QCTWorksheet.check_duplicate(proj, subj, ct_date)
+            return QCTWorksheet.check_duplicate(sheet, subj, ct_date)
 
         return False
 
     @staticmethod
     def add_new_scan(scan: RawScan):
         try:
-            QCTWorksheet.session.worksheet(scan.proj).append_row(
+            QCTWorksheet.session.worksheet(scan.sheet).append_row(
                 values=[
                     scan.proj,
                     scan.subj,
@@ -67,13 +67,13 @@ class QCTWorksheet:
                     scan.dcm_path,
                 ]
             )
-            logger.info(f"Successfully added new scan to {scan.proj}")
+            logger.info(f"Successfully added new scan to {scan.sheet}")
         except GSpreadException:
             logger.warning("GSpread Exception: Quota limit")
             sleep(60)
             return QCTWorksheet.add_new_scan(scan)
         except:
-            logger.exception(f"Sheet {scan.proj} does not exist")
+            logger.exception(f"Sheet {scan.sheet} does not exist")
 
 
 @lru_cache

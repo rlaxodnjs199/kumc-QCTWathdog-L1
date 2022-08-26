@@ -47,9 +47,6 @@ pyasn1-modules==0.2.8
 pydantic==1.9.0
 pydicom==2.3.0
 pyparsing==3.0.7
-PyQt5==5.15.6
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.10.1
 python-dotenv==0.19.2
 pytz==2022.1
 PyYAML==6.0

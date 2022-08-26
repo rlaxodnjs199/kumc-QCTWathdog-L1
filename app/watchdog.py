@@ -54,16 +54,17 @@ class DICOMFolderHandler(FileSystemEventHandler):
         if len(parent_folder_components) == 4 and len(dicom_folder_components) == 2:
             try:
                 proj = parent_folder_components[2]
+                sheet = QCTWorksheetConfig.proj_to_sheet_mapping[proj]
                 study_id = dicom_folder_components[0]
                 subj = re.sub(r"[^a-zA-Z0-9]", "", study_id)
                 ct_date = dicom_folder_components[1]
-                fu = QCTWorksheet.calculate_fu(proj, subj)
+                fu = QCTWorksheet.calculate_fu(sheet, subj)
                 dcm_path = os.path.relpath(path, QCTWorksheetConfig.p_drive_path_prefix)
             except:
                 logger.error("Invalid folder name")
                 return None
 
-            if QCTWorksheet.check_duplicate(proj, subj, ct_date):
+            if QCTWorksheet.check_duplicate(sheet, subj, ct_date):
                 logger.info(
                     f"Scan already exists in QCTWorksheet: Skip {proj}_{subj}_{ct_date}"
                 )
@@ -76,6 +77,7 @@ class DICOMFolderHandler(FileSystemEventHandler):
                 ct_date=ct_date,
                 fu=fu,
                 dcm_path=dcm_path,
+                sheet=sheet,
             )
         else:
             logger.error(f"Invalid folder name syntax - Check path: {path}")

@@ -10,6 +10,22 @@ class QCTWorksheetConfig:
     )
     qctworksheet_api_key = os.environ.get("QCTWORKSHEET_GOOGLE_API_KEY")
     p_drive_path_prefix = os.environ.get("PDRIVE_PATH_PREFIX")
+    proj_to_sheet_mapping = {
+        "SARP": "SARP",
+        "SARP4": "SARP4",
+        "PRECISE": "PRECISE",
+        "GALA": "GALA",
+        "LHC": "LHC",
+        "C19": "C19",
+        "CXe": "C19",
+        "ILD": "ILD",
+        "SSCILD": "ILD",
+        "RAILD": "ILD",
+        "XeMR": "ILD",
+        "ILDKUMR": "ILD",
+        "LCP": "LCP",
+        "LCPAKB": "LCP",
+    }
 
 
 class QCTWatchdogConfig:

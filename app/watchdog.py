@@ -44,7 +44,10 @@ class DICOMFolderHandler(FileSystemEventHandler):
 
     @staticmethod
     def validate_dicom_folder(path) -> bool:
-        return len(os.path.basename(path).split("_")) == 2
+        return (
+            len(os.path.basename(path).split("_")) == 2
+            and len(os.path.basename(os.path.dirname(path)).split("_")) == 4
+        )
 
     @staticmethod
     def construct_raw_scan(path) -> Union[RawScan, None]:
@@ -58,16 +61,17 @@ class DICOMFolderHandler(FileSystemEventHandler):
                 study_id = dicom_folder_components[0]
                 subj = re.sub(r"[^a-zA-Z0-9]", "", study_id)
                 ct_date = dicom_folder_components[1]
+
+                if QCTWorksheet.check_duplicate(sheet, subj, ct_date):
+                    logger.info(
+                        f"Scan already exists in QCTWorksheet: Skip {proj}_{subj}_{ct_date}"
+                    )
+                    return None
+
                 fu = QCTWorksheet.calculate_fu(sheet, subj)
                 dcm_path = os.path.relpath(path, QCTWorksheetConfig.p_drive_path_prefix)
             except:
                 logger.error("Invalid folder name")
-                return None
-
-            if QCTWorksheet.check_duplicate(sheet, subj, ct_date):
-                logger.info(
-                    f"Scan already exists in QCTWorksheet: Skip {proj}_{subj}_{ct_date}"
-                )
                 return None
 
             return RawScan(
@@ -90,7 +94,7 @@ class DICOMFolderHandler(FileSystemEventHandler):
 
             if raw_scan:
                 logger.info(
-                    f"New scan download detected: Project={raw_scan.proj}, StudyID={raw_scan.study_id}, CTDate={raw_scan.ct_date}, Path={raw_scan.dcm_path}"
+                    f"New scan detected: Project={raw_scan.proj}, StudyID={raw_scan.study_id}, CTDate={raw_scan.ct_date}, Path={raw_scan.dcm_path}"
                 )
                 try:
                     qctworksheet.add_new_scan(raw_scan)

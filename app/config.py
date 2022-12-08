@@ -25,7 +25,9 @@ class QCTWorksheetConfig:
         "ILDKUMR": "ILD",
         "LCP": "LCP",
         "LCPAKB": "LCP",
+        "OBERON": "OBERON",
     }
+    redis_pwd = os.environ.get("REDIS_PWD")
 
 
 class QCTWatchdogConfig:

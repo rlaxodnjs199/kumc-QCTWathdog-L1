@@ -1,6 +1,7 @@
 from functools import lru_cache
 from time import sleep
 from loguru import logger
+import redis
 import gspread
 from gspread.exceptions import GSpreadException
 
@@ -23,6 +24,15 @@ class QCTWorksheet:
     except:
         session = None
         logger.exception("Failed to initiate Google spread sheet session")
+    try:
+        r = redis.Redis(
+            host="localhost",
+            port=6379,
+            db=1,
+            password=QCTWorksheetConfig.redis_pwd,
+        )
+    except:
+        logger.exception("Failed to connect redis")
 
     @staticmethod
     def calculate_fu(sheet: str, subj: str) -> int:
@@ -36,20 +46,26 @@ class QCTWorksheet:
 
         return len(subj_scan_indexes)
 
-    @staticmethod
-    def check_duplicate(sheet: str, subj: str, ct_date: str):
-        try:
-            subj_scan_list = QCTWorksheet.session.worksheet(sheet).findall(subj)
-            for subj_scan in subj_scan_list:
-                subj_scan_ct_date = QCTWorksheet.session.worksheet(sheet).row_values(
-                    subj_scan.row
-                )[4]
-                if subj_scan_ct_date == ct_date:
-                    return True
-        except GSpreadException:
-            logger.warning("GSpread Exception: Quota limit")
-            sleep(60)
-            return QCTWorksheet.check_duplicate(sheet, subj, ct_date)
+    @classmethod
+    def check_duplicate(cls, sheet: str, subj: str, ct_date: str):
+        if cls.r.get(f"{sheet}_{subj}_{ct_date}"):
+            logger.info(f"Redis cache hit - {sheet}_{subj}_{ct_date}")
+            return True
+        else:
+            try:
+                subj_scan_list = QCTWorksheet.session.worksheet(sheet).findall(subj)
+                for subj_scan in subj_scan_list:
+                    subj_scan_ct_date = QCTWorksheet.session.worksheet(
+                        sheet
+                    ).row_values(subj_scan.row)[4]
+                    if subj_scan_ct_date == ct_date:
+                        return True
+                logger.info(f"Caching the result to Redis - {sheet}_{subj}_{ct_date}")
+                cls.r.set(f"{sheet}_{subj}_{ct_date}", "checked")
+            except GSpreadException:
+                logger.warning("GSpread Exception: Quota limit")
+                sleep(60)
+                return QCTWorksheet.check_duplicate(sheet, subj, ct_date)
 
         return False
 

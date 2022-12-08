@@ -6,22 +6,21 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
 import re
 
-from app.config import QCTWatchdogConfig, QCTWorksheetConfig
+from app.config import QCTWorksheetConfig
 from app.models import RawScan
 from app.qctworksheet import QCTWorksheet, qctworksheet
 
 
 class QCTWorksheetWatcher:
-    def __init__(self, paths_to_watch: List, handler) -> None:
+    def __init__(self, path_to_watch: str, handler) -> None:
         self.observer = PollingObserver()
         self.handler = handler()
-        self.paths_to_watch = paths_to_watch
+        self.path_to_watch = path_to_watch
 
     async def _run(self):
         logger.add("logs/qctwatchdog.log", level="DEBUG")
-        for path in self.paths_to_watch:
-            self.observer.schedule(self.handler, path, recursive=True)
-            logger.info(f"The watchdog observer starts watching - {path}")
+        self.observer.schedule(self.handler, self.path_to_watch, recursive=True)
+        logger.info(f"The watchdog observer starts watching - {self.path_to_watch}")
         self.observer.start()
 
         try:
@@ -71,7 +70,7 @@ class DICOMFolderHandler(FileSystemEventHandler):
                 fu = QCTWorksheet.calculate_fu(sheet, subj)
                 dcm_path = os.path.relpath(path, QCTWorksheetConfig.p_drive_path_prefix)
             except:
-                logger.error("Invalid folder name")
+                logger.error(f"Invalid path - {path}")
                 return None
 
             return RawScan(
@@ -102,7 +101,5 @@ class DICOMFolderHandler(FileSystemEventHandler):
                     logger.error("Add new scan entry to the QCT Worksheet failed")
 
 
-def initiate_qctwatchdog():
-    dicom_download_paths = QCTWatchdogConfig.dicom_download_paths
-    qctwatchdog = QCTWorksheetWatcher(dicom_download_paths, DICOMFolderHandler)
-    qctwatchdog.run()
+def initiate_qctwatchdog(dicom_path):
+    qctwatchdog = QCTWorksheetWatcher(dicom_path, DICOMFolderHandler).run()

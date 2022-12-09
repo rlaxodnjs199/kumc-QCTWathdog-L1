@@ -26,6 +26,7 @@ class QCTWorksheetConfig:
         "LCP": "LCP",
         "LCPAKB": "LCP",
         "OBERON": "OBERON",
+        "Xe-Imaging": "Xe-Imaging",
     }
     redis_pwd = os.environ.get("REDIS_PWD")
 

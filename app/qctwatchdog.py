@@ -1,6 +1,6 @@
 import os
 import asyncio
-from typing import List, Union
+from typing import Union
 from loguru import logger
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers.polling import PollingObserver
@@ -11,16 +11,19 @@ from app.models import RawScan
 from app.qctworksheet import QCTWorksheet, qctworksheet
 
 
-class QCTWorksheetWatcher:
-    def __init__(self, path_to_watch: str, handler) -> None:
+class QCTWatchdog:
+    def __init__(self, paths, handler) -> None:
         self.observer = PollingObserver()
         self.handler = handler()
-        self.path_to_watch = path_to_watch
+        self.paths = paths
+
+    def _add_paths(self):
+        logger.add("logs/qctwatchdog.log", level="DEBUG")
+        for path in self.paths:
+            self.observer.schedule(self.handler, path, recursive=True)
+            logger.info(f"Path Added - {path}")
 
     async def _run(self):
-        logger.add("logs/qctwatchdog.log", level="DEBUG")
-        self.observer.schedule(self.handler, self.path_to_watch, recursive=True)
-        logger.info(f"The watchdog observer starts watching - {self.path_to_watch}")
         self.observer.start()
 
         try:
@@ -33,6 +36,7 @@ class QCTWorksheetWatcher:
         self.observer.join()
 
     def run(self):
+        self._add_paths()
         asyncio.get_event_loop().run_until_complete(self._run())
 
 
@@ -99,7 +103,3 @@ class DICOMFolderHandler(FileSystemEventHandler):
                     qctworksheet.add_new_scan(raw_scan)
                 except:
                     logger.error("Add new scan entry to the QCT Worksheet failed")
-
-
-def initiate_qctwatchdog(dicom_path):
-    qctwatchdog = QCTWorksheetWatcher(dicom_path, DICOMFolderHandler).run()

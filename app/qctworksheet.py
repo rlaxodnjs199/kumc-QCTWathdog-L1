@@ -26,7 +26,7 @@ class QCTWorksheet:
         logger.exception("Failed to initiate Google spread sheet session")
     try:
         r = redis.Redis(
-            host="localhost",
+            host="redis",
             port=6379,
             db=1,
             password=QCTWorksheetConfig.redis_pwd,

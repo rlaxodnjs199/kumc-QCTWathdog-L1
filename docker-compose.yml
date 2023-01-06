@@ -14,3 +14,9 @@ services:
 
 volumes:
   qctwatchdog:
+
+
+networks:
+  default:
+    name: fastapi_default
+    external: true
